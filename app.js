@@ -4,7 +4,6 @@ const express = require("express");
 const CognitoExpress = require("cognito-express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const res = require("express/lib/response");
 const AWS = require("aws-sdk");
 
 const app = express();
@@ -27,6 +26,8 @@ AWS.config.update({
 var docClient = new AWS.DynamoDB.DocumentClient();
 
 const authRoutes = express.Router();
+const publicRoutes = express.Router();
+app.use("/public", publicRoutes);
 app.use("/auth", authRoutes);
 
 authRoutes.use(function (req, res, next) {
@@ -47,11 +48,93 @@ authRoutes.post("/create-poll", (req, res) => {
       Item: {
         name: req.body.name,
         description: req.body.description,
+        redirectURL: req.body.redirectURL,
+        author: req.body.author,
         prompts: req.body.prompts,
         userId: res.locals.user.sub,
         pollId: uuidv4(),
       },
       TableName: "surveyontheway-polls",
+    },
+    function (err, data) {
+      if (err) {
+        console.log(err, err.stack);
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(201);
+      }
+    }
+  );
+});
+
+authRoutes.get("/get-user-polls", (req, res) => {
+  docClient.scan(
+    {
+      FilterExpression: "userId = :value",
+      ExpressionAttributeValues: {
+        ":value": res.locals.user.sub,
+      },
+      TableName: "surveyontheway-polls",
+    },
+    function (err, data) {
+      if (err) {
+        console.log(err, err.stack);
+        res.sendStatus(500);
+      } else {
+        res.status(200).send(data.Items);
+      }
+    }
+  );
+});
+
+publicRoutes.get("/get-responses", (req, res) => {
+  docClient.scan(
+    {
+      FilterExpression: "pollId = :value",
+      ExpressionAttributeValues: {
+        ":value": req.query.pollId,
+      },
+      TableName: "surveyontheway-responses",
+    },
+    function (err, data) {
+      if (err) {
+        console.log(err, err.stack);
+        res.sendStatus(500);
+      } else {
+        res.status(200).send(data.Items);
+      }
+    }
+  );
+});
+
+publicRoutes.get("/get-poll", (req, res) => {
+  docClient.get(
+    {
+      Key: {
+        pollId: req.query.pollId,
+      },
+      TableName: "surveyontheway-polls",
+    },
+    function (err, data) {
+      if (err) {
+        console.log(err, err.stack);
+        res.sendStatus(404);
+      } else {
+        res.status(200).send(data.Item);
+      }
+    }
+  );
+});
+
+publicRoutes.post("/respond", (req, res) => {
+  docClient.put(
+    {
+      Item: {
+        pollId: req.body.pollId,
+        responseId: uuidv4(),
+        values: req.body.values,
+      },
+      TableName: "surveyontheway-responses",
     },
     function (err, data) {
       if (err) {
