@@ -147,6 +147,6 @@ publicRoutes.post("/respond", (req, res) => {
   );
 });
 
-app.listen(proess.env.PORT, () => {
+app.listen(process.env.PORT, () => {
   console.log(`Listening on port ${process.env.PORT}...`);
 });
