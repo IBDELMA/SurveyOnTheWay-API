@@ -147,6 +147,7 @@ publicRoutes.post("/respond", (req, res) => {
   );
 });
 
+console.log("Test CI/CD");
 app.listen(process.env.PORT, () => {
   console.log(`Listening on port ${process.env.PORT}...`);
 });
