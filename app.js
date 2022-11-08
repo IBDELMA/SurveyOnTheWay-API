@@ -147,6 +147,8 @@ publicRoutes.post("/respond", (req, res) => {
   );
 });
 
+const deploymentVersion = "1.0.0";
+console.log("Running deployment " + deploymentVersion);
 app.listen(process.env.PORT, () => {
   console.log(`Listening on port ${process.env.PORT}...`);
 });
