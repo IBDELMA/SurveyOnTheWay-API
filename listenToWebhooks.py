@@ -1,12 +1,12 @@
 from flask import Flask, request
 import git
-import os
-from dotenv import load_dotenv
+# import os
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 app = Flask(__name__)
-g = git.cmd.Git(os.getenv('GIT_DIR'))
+g = git.cmd.Git(".")
 @app.route('/', methods=['POST'])
 def listen():
     print("Received Webhook!")
